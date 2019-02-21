@@ -31,9 +31,13 @@ RUN set -ex && \
         # enable NOTEBOOK_URL to get git repos
         git && \
     pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir pandas pandasql scikit-learn matplotlib && \
+    pip3 install --no-cache-dir pandas pandasql scikit-learn matplotlib plotly && \
     pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} && \
-    mkdir /notebooks && mkdir /root/.jupyter
+    mkdir /notebooks && mkdir /root/.jupyter && \
+    wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
+    tar -xvzf pandoc-2.6-linux.tar.gz && \
+    mv pandoc-2.6/bin/pandoc* /usr/local/bin/ && \
+    rm -rf pandoc*
 
 COPY jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
 COPY entrypoint.sh /entrypoint.sh

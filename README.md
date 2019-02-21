@@ -9,7 +9,7 @@ It includes support for:
   - pandas.
   - pandasql
   - scikit-learn.
-  - matplotlib for visualization.
+  - matplotlib and plotly for visualization.
 - R 3.5.
   - tidyverse.
   - devtools.
