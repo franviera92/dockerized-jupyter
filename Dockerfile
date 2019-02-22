@@ -15,6 +15,7 @@ FROM alpine:3.8
 LABEL maintainer="cgiraldo@gradiant.org"
 LABEL organization="gradiant.org"
 ENV JUPYTER_VERSION=5.7.4 JUPYTERLAB_VERSION=0.35.4
+COPY py3-pandas-0.24.1-r0.apk / 
 # PYTHON layer
 RUN set -ex && \
     apk add --no-cache bash \
@@ -25,13 +26,15 @@ RUN set -ex && \
         py-numpy-dev \
         py3-scipy \
         py3-numpy-f2py \
+        zeromq-dev \
         # matplotlib deps
         freetype-dev \
         libpng-dev \
         # enable NOTEBOOK_URL to get git repos
         git && \
+    apk add --allow-untrusted /py3-pandas-0.24.1-r0.apk && rm /py3-pandas-0.24.1-r0.apk && \
     pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir pandas pandasql scikit-learn matplotlib plotly && \
+    pip3 install --no-cache-dir pandasql scikit-learn matplotlib plotly && \
     pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} && \
     mkdir /notebooks && mkdir /root/.jupyter && \
     wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
