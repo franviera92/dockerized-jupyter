@@ -1,0 +1,40 @@
+FROM alpine:3.8
+
+LABEL maintainer="cgiraldo@gradiant.org" \
+      organization="gradiant.org"
+
+ENV JUPYTER_VERSION=5.7.4 \
+    JUPYTERLAB_VERSION=0.35.4 \
+    JUPYTER_PORT=8888 \
+    JUPYTERLAB=false
+
+##############################
+# JUPYTER layers
+##############################
+RUN set -ex && \
+    apk add --no-cache bash \
+        build-base \
+        python3 \
+        python3-dev \
+        zeromq-dev \
+        libxml2-dev \
+        libxslt-dev \
+        # enable NOTEBOOK_URL to get git repos
+        git && \
+    pip3 install --upgrade pip && \
+    pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} ipywidgets jupyter-contrib-nbextensions && \
+    jupyter contrib nbextension install && \
+    ## Fix nbextension tab disappearing https://github.com/Jupyter-contrib/jupyter_nbextensions_configurator/pull/85
+    sed -i 's/jqueryui/jquery/g' /usr/lib/python3.6/site-packages/jupyter_nbextensions_configurator/static/nbextensions_configurator/tree_tab/main.js && \  
+    mkdir /notebooks  && \
+    wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
+    tar -xvzf pandoc-2.6-linux.tar.gz && \
+    mv pandoc-2.6/bin/pandoc* /usr/local/bin/ && \
+    rm -rf pandoc*
+
+
+COPY files/jupyter/ /
+
+VOLUME /notebooks
+
+ENTRYPOINT ["/entrypoint.sh"]
