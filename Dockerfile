@@ -19,7 +19,8 @@ LABEL maintainer="cgiraldo@gradiant.org" \
 ENV JUPYTER_VERSION=5.7.4 \
     JUPYTERLAB_VERSION=0.35.4 \
     JUPYTER_PORT=8888 \
-    JUPYTERLAB=false
+    JUPYTERLAB=false \
+    JUPYTERHUB_VERSION=0.9.4
 
 ##############################
 # JUPYTER layers
@@ -34,7 +35,9 @@ RUN set -ex && \
         libxslt-dev \
         # enable NOTEBOOK_URL to get git repos
         git && \
-    pip3 install --upgrade pip && \
+    pip3 install --no-cache-dir --upgrade pip && \
+    # https://github.com/jupyter/notebook/issues/4311
+    pip3 install --no-cache-dir tornado==5.1.1 && \
     pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} ipywidgets jupyter-contrib-nbextensions && \
     jupyter contrib nbextension install && \
     ## Fix nbextension tab disappearing https://github.com/Jupyter-contrib/jupyter_nbextensions_configurator/pull/85
@@ -43,7 +46,13 @@ RUN set -ex && \
     wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
     tar -xvzf pandoc-2.6-linux.tar.gz && \
     mv pandoc-2.6/bin/pandoc* /usr/local/bin/ && \
-    rm -rf pandoc*
+    rm -rf pandoc* && \
+    # Jupyterhub option
+    pip3 install --no-cache-dir jupyterhub==${JUPYTERHUB_VERSION} && \
+    apk add --no-cache linux-pam \
+                       npm && \
+    npm install -g configurable-http-proxy
+
 
 
 COPY files/jupyter/ /
@@ -106,12 +115,6 @@ RUN pip3 install beakerx requests && \
 ##############################
 # R layers
 ##############################
-
-FROM alpine:3.8
-LABEL maintainer="cgiraldo@gradiant.org"
-LABEL organization="gradiant.org"
-ENV JUPYTER_VERSION=5.7.4 JUPYTERLAB_VERSION=0.35.4
-
 COPY --from=R-fs-builder /fs-master.tgz /
 
 RUN set -ex && \
