@@ -1,3 +1,5 @@
+FROM gradiant/spark:2.4.0 as spark
+
 FROM alpine:3.8 as R-fs-builder
 LABEL maintainer="cgiraldo@gradiant.org"
 LABEL organization="gradiant.org"
@@ -20,7 +22,11 @@ ENV JUPYTER_VERSION=5.7.4 \
     JUPYTERLAB_VERSION=0.35.4 \
     JUPYTER_PORT=8888 \
     JUPYTERLAB=false \
-    JUPYTERHUB_VERSION=0.9.4
+    JUPYTERHUB_VERSION=0.9.4 \
+    NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 
+
 
 ##############################
 # JUPYTER layers
@@ -38,11 +44,11 @@ RUN set -ex && \
     pip3 install --no-cache-dir --upgrade pip && \
     # https://github.com/jupyter/notebook/issues/4311
     pip3 install --no-cache-dir tornado==5.1.1 && \
-    pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} ipywidgets jupyter-contrib-nbextensions && \
+    pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} nbgitpuller==0.6.1 ipywidgets jupyter-contrib-nbextensions && \
+    jupyter serverextension enable --py nbgitpuller --sys-prefix && \
     jupyter contrib nbextension install && \
     ## Fix nbextension tab disappearing https://github.com/Jupyter-contrib/jupyter_nbextensions_configurator/pull/85
     sed -i 's/jqueryui/jquery/g' /usr/lib/python3.6/site-packages/jupyter_nbextensions_configurator/static/nbextensions_configurator/tree_tab/main.js && \  
-    mkdir /notebooks  && \
     wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
     tar -xvzf pandoc-2.6-linux.tar.gz && \
     mv pandoc-2.6/bin/pandoc* /usr/local/bin/ && \
@@ -52,14 +58,6 @@ RUN set -ex && \
     apk add --no-cache linux-pam \
                        npm && \
     npm install -g configurable-http-proxy
-
-
-
-COPY files/jupyter/ /
-
-VOLUME /notebooks
-
-ENTRYPOINT ["/entrypoint.sh"]
 
 ##############################
 # Spark & Kafka Support layers
@@ -81,6 +79,9 @@ RUN apk add --no-cache openjdk8-jre libc6-compat && mkdir /opt && \
     -O /opt/spark-$SPARK_VERSION-bin-hadoop2.7/jars/spark-sql-kafka-0-10_2.11-$SPARK_VERSION.jar && \
     wget http://central.maven.org/maven2/org/apache/kafka/kafka-clients/1.0.0/kafka-clients-1.0.0.jar \
     -O /opt/spark-$SPARK_VERSION-bin-hadoop2.7/jars/kafka-clients-1.0.0.jar
+# Copy native libraries from gradiant/spark docker image
+COPY --from=spark /lib/libhadoop.* /lib/
+COPY --from=spark /lib/libhdfs.* /lib/
 
 ##############################
 # PYTHON Data-science layers
@@ -139,4 +140,19 @@ RUN set -ex && \
       repos = 'http://cran.us.r-project.org')" && \
     #R development packages
     R -e "install.packages('devtools', repos = 'http://cran.us.r-project.org')"
+
+
+EXPOSE 8888
+COPY files/jupyter/ /
+
+ENV HOME=/home/$NB_USER
+WORKDIR $HOME
+RUN apk add --no-cache shadow sudo && \
+    adduser -s /bin/bash -h /home/jovyan -D -G $(getent group $NB_GID | awk -F: '{printf $1}') -u $NB_UID $NB_USER && \
+    fix-permissions /home/jovyan
+
+USER $NB_UID
+
+
+CMD ["start-notebook.sh"]
 

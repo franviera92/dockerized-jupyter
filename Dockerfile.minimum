@@ -6,7 +6,11 @@ LABEL maintainer="cgiraldo@gradiant.org" \
 ENV JUPYTER_VERSION=5.7.4 \
     JUPYTERLAB_VERSION=0.35.4 \
     JUPYTER_PORT=8888 \
-    JUPYTERLAB=false
+    JUPYTERLAB=false \
+    JUPYTERHUB_VERSION=0.9.4 \
+    NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 
 
 ##############################
 # JUPYTER layers
@@ -21,20 +25,35 @@ RUN set -ex && \
         libxslt-dev \
         # enable NOTEBOOK_URL to get git repos
         git && \
-    pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} ipywidgets jupyter-contrib-nbextensions && \
+    pip3 install --no-cache-dir --upgrade pip && \
+    # https://github.com/jupyter/notebook/issues/4311
+    pip3 install --no-cache-dir tornado==5.1.1 && \
+    pip3 install --no-cache-dir notebook==${JUPYTER_VERSION} jupyterlab==${JUPYTERLAB_VERSION} nbgitpuller==0.6.1 ipywidgets jupyter-contrib-nbextensions && \
+    jupyter serverextension enable --py nbgitpuller --sys-prefix && \
     jupyter contrib nbextension install && \
     ## Fix nbextension tab disappearing https://github.com/Jupyter-contrib/jupyter_nbextensions_configurator/pull/85
     sed -i 's/jqueryui/jquery/g' /usr/lib/python3.6/site-packages/jupyter_nbextensions_configurator/static/nbextensions_configurator/tree_tab/main.js && \  
-    mkdir /notebooks  && \
     wget https://github.com/jgm/pandoc/releases/download/2.6/pandoc-2.6-linux.tar.gz && \
     tar -xvzf pandoc-2.6-linux.tar.gz && \
     mv pandoc-2.6/bin/pandoc* /usr/local/bin/ && \
-    rm -rf pandoc*
+    rm -rf pandoc* && \
+    # Jupyterhub option
+    pip3 install --no-cache-dir jupyterhub==${JUPYTERHUB_VERSION} && \
+    apk add --no-cache linux-pam \
+                       npm && \
+    npm install -g configurable-http-proxy
 
 
+EXPOSE 8888
 COPY files/jupyter/ /
 
-VOLUME /notebooks
+ENV HOME=/home/$NB_USER
+WORKDIR $HOME
+RUN apk add --no-cache shadow sudo && \
+    adduser -s /bin/bash -h /home/jovyan -D -G $(getent group $NB_GID | awk -F: '{printf $1}') -u $NB_UID $NB_USER && \
+    fix-permissions /home/jovyan
 
-ENTRYPOINT ["/entrypoint.sh"]
+USER $NB_UID
+
+CMD ["start-notebook.sh"]
+
