@@ -72,7 +72,7 @@ ENV JAVA_HOME=/usr/lib/jvm/default-jvm/ \
     PYTHONPATH="$SPARK_HOME/python:$SPARK_HOME/python/build:$SPARK_HOME/python/lib/py4j-0.10.7-src.zip:$PYTHONPATH" \
     SPARK_OPTS=""
 
-RUN apk add --no-cache openjdk8-jre libc6-compat && mkdir /opt && \
+RUN apk add --no-cache openjdk8-jre libc6-compat nss && mkdir /opt && \
     wget -qO- https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz | tar xvz -C /opt && \
     ln -s /opt/spark-$SPARK_VERSION-bin-hadoop2.7 /opt/spark && \
     wget http://central.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.11/$SPARK_VERSION/spark-sql-kafka-0-10_2.11-$SPARK_VERSION.jar \
@@ -119,6 +119,9 @@ RUN pip3 install beakerx requests && \
 COPY --from=R-fs-builder /fs-master.tgz /
 
 RUN set -ex && \
+    # Thereis a problem installing R openssl package if libssl1.0 package is installed in the system. 
+    # as a temporal patch We temporary delete libssl1.0 package and reinstall.
+    apk del nodejs npm libssl1.0 libcrypto1.0 &&\
     apk add autoconf \
             automake \
             freetype-dev \
@@ -133,13 +136,15 @@ RUN set -ex && \
     R -e "install.packages('/fs-master.tgz', repos= NULL, type='source')" && \
     rm /fs-master.tgz && \
     R -e "install.packages('IRkernel', repos = 'http://cran.us.r-project.org')" && \
+    R -e "IRkernel::installspec(user = FALSE)" && \
     #R packages for data science (tidyverse)
     R -e "install.packages(c('tidyverse'),repos = 'http://cran.us.r-project.org')" && \
     #R visualization packages
     R -e "install.packages(c('ggridges','plotly','leaflet'),\
       repos = 'http://cran.us.r-project.org')" && \
     #R development packages
-    R -e "install.packages('devtools', repos = 'http://cran.us.r-project.org')"
+    R -e "install.packages('devtools', repos = 'http://cran.us.r-project.org')" && \
+    apk add nodejs npm libssl1.0 libcrypto1.0 
 
 
 EXPOSE 8888
