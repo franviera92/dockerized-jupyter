@@ -86,7 +86,7 @@ COPY --from=spark /lib/libhdfs.* /lib/
 ##############################
 # PYTHON Data-science layers
 ##############################
-COPY files/python/py3-pandas-0.24.1-r0.apk / 
+COPY files/python/* / 
 RUN set -ex && \
     apk add --no-cache \
         py3-numpy \
@@ -95,16 +95,19 @@ RUN set -ex && \
         py3-numpy-f2py \
         # matplotlib deps
         freetype-dev \
-        libpng-dev \
-        # enable NOTEBOOK_URL to get git repos
-        git && \
+        libpng-dev && \
+    python3 -m pip install --no-cache-dir --upgrade pip setuptools && \
     apk add --allow-untrusted /py3-pandas-0.24.1-r0.apk && rm /py3-pandas-0.24.1-r0.apk && \
     pip3 install --no-cache-dir pandasql scikit-learn matplotlib plotly ipyleaflet && \
     # findspark to use pyspark with regular ipython kernel. At the beggining of your notebook run
     # import findspark
     # findspark.init()
     # import pyspark
-    pip3 install findspark
+    pip3 install findspark && \
+    # install pyarrow for efficient pandas dataframe <-> spark dataframe
+    apk add --no-cache boost && \
+    easy_install /pyarrow-0.12.1a0-py3.6-linux-x86_64.egg && \ 
+    rm /pyarrow-0.12.1a0-py3.6-linux-x86_64.egg 
 
 #############################
 # BeakerX Extensions for scala kernel
@@ -150,12 +153,13 @@ RUN set -ex && \
 EXPOSE 8888
 COPY files/jupyter/ /
 
-ENV HOME=/home/$NB_USER
-WORKDIR $HOME
+
 RUN apk add --no-cache shadow sudo && \
     adduser -s /bin/bash -h /home/jovyan -D -G $(getent group $NB_GID | awk -F: '{printf $1}') -u $NB_UID $NB_USER && \
     fix-permissions /home/jovyan
 
+ENV HOME=/home/$NB_USER
+WORKDIR $HOME
 USER $NB_UID
 
 
