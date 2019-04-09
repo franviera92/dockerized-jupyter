@@ -72,7 +72,7 @@ ENV JAVA_HOME=/usr/lib/jvm/default-jvm/ \
     PYTHONPATH="$SPARK_HOME/python:$SPARK_HOME/python/build:$SPARK_HOME/python/lib/py4j-0.10.7-src.zip:$PYTHONPATH" \
     SPARK_OPTS=""
 
-RUN apk add --no-cache openjdk8-jre libc6-compat nss && mkdir /opt && \
+RUN apk add --no-cache openjdk8-jre libc6-compat nss maven && mkdir /opt && \
     wget -qO- https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz | tar xvz -C /opt && \
     ln -s /opt/spark-$SPARK_VERSION-bin-hadoop2.7 /opt/spark && \
     wget http://central.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.11/$SPARK_VERSION/spark-sql-kafka-0-10_2.11-$SPARK_VERSION.jar \
@@ -157,6 +157,7 @@ COPY files/jupyter/ /
 RUN apk add --no-cache shadow sudo && \
     adduser -s /bin/bash -h /home/jovyan -D -G $(getent group $NB_GID | awk -F: '{printf $1}') -u $NB_UID $NB_USER && \
     fix-permissions /home/jovyan
+
 
 ENV HOME=/home/$NB_USER
 WORKDIR $HOME
