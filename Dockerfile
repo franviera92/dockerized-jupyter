@@ -86,7 +86,7 @@ COPY --from=spark /lib/libhdfs.* /lib/
 ##############################
 # PYTHON Data-science layers
 ##############################
-COPY files/python/* / 
+COPY files/python/ / 
 RUN set -ex && \
     apk add --no-cache \
         py3-numpy \
@@ -112,7 +112,7 @@ RUN set -ex && \
 #############################
 # BeakerX Extensions for scala kernel
 #############################
-RUN pip3 install beakerx requests && \
+RUN pip3 install beakerx==1.4.0 requests && \
         cp -r /usr/lib/python3.6/site-packages/beakerx/static/* /usr/share/jupyter/nbextensions/beakerx/ && \
         beakerx install
 
