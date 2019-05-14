@@ -113,7 +113,8 @@ ENV PATH="$PATH:$SPARK_HOME/sbin:$SPARK_HOME/bin" \
 
 # Copy native libraries from gradiant/hadoop-base docker image
 COPY --from=hadoop /opt/hadoop/lib/native/* /lib/
-RUN apk add --no-cache openjdk8-jre libc6-compat nss maven && mkdir -p /opt && \
+RUN ln -s /lib /lib64 && \
+    apk add --no-cache openjdk8-jre libc6-compat nss maven && mkdir -p /opt && \
     wget -qO- https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz | tar xvz -C /opt && \
     ln -s /opt/spark-$SPARK_VERSION-bin-hadoop2.7 /opt/spark && \
     cd /opt/spark/python/lib && ln -s py4j-*-src.zip py4j-src.zip
