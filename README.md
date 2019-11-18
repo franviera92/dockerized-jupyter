@@ -2,8 +2,8 @@
 This is a lightweight Jupyter Docker Image for Big Data Analytics.
 
 It includes support for: 
-- Apache Spark 2.4.
-- Python3.6.
+- Apache Spark 2.4.4
+- Python3.7.
   - numpy.
   - scipy.
   - pandas.
@@ -15,8 +15,7 @@ It includes support for:
   - devtools.
   - ggridges ,plotly, leaflet for visualization.
 - Jupyterlab next-generation notebook environment.
-- [BeakerX extensions](http://beakerx.com/)
-
+- Apache Toree for Spark Kernel
 
 ## Quick Start
 
@@ -33,23 +32,9 @@ Configuration is set by the following environment variables:
 
 | Variables    | Default  | Description |
 | ------------ | -------- | ----------- |
-| JUPYTERLAB  | false    | enables the next-generation user interface for Project Jupyter. |
+| JUPYTER_ENABLE_LAB | true   | enables the next-generation user interface for Project Jupyter. |
 | JUPYTER_PORT | 8888     | binding port of jupyter http server  |
-| NOTEBOOKS_URL | (empty) | url to download notebooks to add to /notebooks dir. It can be a .zip .tar.gz .ipynb or a git repo |
 
-**Examples**
-
-Enabling JuypterLab:
-
-```
-docker run -p 8888:8888 -e JUPYTERLAB=true -d gradiant/jupyter
-```
-
-Prepopulate notebooks dir with git repo contents:
-
-```
-docker run -p 8888:8888 -e NOTEBOOKS_URL=https://github.com/Gradiant/notebooks.git -d gradiant/jupyter
-```
 
 ## Notebook Persistence
 
@@ -71,24 +56,4 @@ docker run -p 8888:8888  -v "$(pwd)"/notebooks:/notebooks -d gradiant/jupyter
 
 ## Spark Support
 
-The image includes Spark 2.4.0 support for scala, python and R.
-
-**scala**
-
-BeakerX Scala and Java Kernels provides support for Spark.
-
-
-**python**
-
-pyspark can be used in regular python3 notebooks if you provide the following initial cell:
-
-```
-import findspark
-findspark.init()
-```
-
-You can set the an external spark cluster when creating the SparkContext in your notebook:
-```
-import pyspark
-pyspark.SparkContext("spark://spark-master.example.com:7077")
-```
+The image includes Spark 2.4.4 support through Apache Toree Kernels.
