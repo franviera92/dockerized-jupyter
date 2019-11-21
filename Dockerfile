@@ -21,7 +21,7 @@ RUN    pip3 install --no-cache-dir httplib2==0.12.0 && \
     pip3 install --no-cache-dir notebook==$JUPYTER_VERSION jupyterlab==$JUPYTERLAB_VERSION nbgitpuller==0.7.2 && \
     jupyter serverextension enable --py nbgitpuller --sys-prefix && \
     # tfx already install pyarrow scipy pandas scikit-learn hdfs, avro-python3 pymongo etc.
-    pip3 install --no-cache-dir tensorflow==1.14.0 tfx==0.14.0 && \
+    pip3 install --no-cache-dir tensorflow==1.14.0 tfx==0.14.0 matplotlib==3.1.1 && \
     pip3 install kafka-python==1.4.7 && \
     # Jupyterhub option
     apt update && apt install -y npm nodejs && rm -rf /var/lib/apt/lists/* && \
