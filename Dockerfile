@@ -21,7 +21,7 @@ RUN    pip3 install --no-cache-dir httplib2==0.12.0 && \
     pip3 install --no-cache-dir notebook==$JUPYTER_VERSION jupyterlab==$JUPYTERLAB_VERSION nbgitpuller==0.7.2 && \
     jupyter serverextension enable --py nbgitpuller --sys-prefix && \
     # tfx already install pyarrow scipy pandas scikit-learn hdfs, avro-python3 pymongo etc.
-    pip3 install --no-cache-dir tensorflow==1.14.0 tfx==0.14.0 && \
+    pip3 install --no-cache-dir tensorflow==1.14.0 tfx==0.14.0 matplotlib==3.1.1 && \
     pip3 install kafka-python==1.4.7 && \
     # Jupyterhub option
     apt update && apt install -y npm nodejs && rm -rf /var/lib/apt/lists/* && \
@@ -56,7 +56,7 @@ ENV PATH="$PATH:$SPARK_HOME/sbin:$SPARK_HOME/bin" \
     SPARK_URL="local[*]" \
     PYTHONPATH="${SPARK_HOME}/python/lib/pyspark.zip:${SPARK_HOME}/python/lib/py4j-src.zip:$PYTHONPATH" \
     SPARK_OPTS="" \
-    PYSPARK_PYTHON=/usr/bin/python3 
+    PYSPARK_PYTHON=/usr/bin/python3
 
 RUN mkdir -p /usr/share/man/man1 && \
     echo "deb http://deb.debian.org/debian unstable main" > /etc/apt/sources.list.d/91-unstable.list && \
@@ -64,7 +64,10 @@ RUN mkdir -p /usr/share/man/man1 && \
     cd /usr/lib/jvm && ln -s java-8-openjdk-amd64 default-jvm && \
     wget -qO- https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz | tar xvz -C /opt && \
     ln -s /opt/spark-$SPARK_VERSION-bin-hadoop2.7 /opt/spark && \
-    cd /opt/spark/python/lib && ln -s py4j-*-src.zip py4j-src.zip
+    cd /opt/spark/python/lib && ln -s py4j-*-src.zip py4j-src.zip && \
+    wget -qO $SPARK_HOME/jars/spark-avro_2.11-$SPARK_VERSION.jar \
+      "https://search.maven.org/remotecontent?filepath=org/apache/spark/spark-avro_2.11/$SPARK_VERSION/spark-avro_2.11-$SPARK_VERSION.jar" &&\
+    cp $SPARK_HOME/examples/jars/spark-examples_2.11-$SPARK_VERSION.jar $SPARK_HOME/jars
 
 
 #####################################
@@ -85,6 +88,7 @@ RUN pip3 install toree==0.3.0 && \
 #    wget http://central.maven.org/maven2/org/apache/kafka/kafka-clients/2.0.0/kafka-clients-2.0.0.jar \
 #    -O /opt/spark/jars/kafka-clients-2.0.0.jar
 RUN pip3 install mlflow==1.3.0
+
 
 # create a user, since we don't want to run as root
 ENV NB_USER=jovyan
