@@ -98,6 +98,7 @@ ENV HOME=/home/jovyan
 RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
 WORKDIR $HOME
 COPY files /
-#USER jovyan
+
+USER jovyan
 
 CMD ["start-notebook.sh"]
