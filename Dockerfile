@@ -101,4 +101,4 @@ COPY files /
 
 USER jovyan
 
-CMD ["start-notebook.sh"]
+ENTRYPOINT ["start-notebook.sh"]
