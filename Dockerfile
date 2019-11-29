@@ -126,5 +126,4 @@ RUN cd $HOME && \
 ENTRYPOINT ["start-notebook.sh"]
 
 #docker build -t spark-elastic /root/dockerized-jupyter/
-#docker run -p 8888:8888 gradiant/jupyter:6.0.1 --ip=0.0.0.0
 #docker run -p 8888:8888 spark-elastic --ip=0.0.0.0
