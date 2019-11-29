@@ -7,7 +7,7 @@ ENV JUPYTER_VERSION=6.0.1 \
     JUPYTERLAB_VERSION=1.1.4 \
     JUPYTER_PORT=8888 \
     JUPYTER_ENABLE_LAB=true \
-    JUPYTERHUB_VERSION=1.0.0 
+    JUPYTERHUB_VERSION=1.0.0
 
 
 ##############################
@@ -15,7 +15,7 @@ ENV JUPYTER_VERSION=6.0.1 \
 ##############################
 
 RUN apt update && apt install -y python3 python3-dev python3-pip git sudo && rm -rf /var/lib/apt/lists/* && \
-    pip3 install --no-cache-dir --upgrade pip setuptools 
+    pip3 install --no-cache-dir --upgrade pip setuptools
     # pip3 installing tfx error ERROR: apache-beam 2.15.0 has requirement httplib2<=0.12.0,>=0.8, but you'll have httplib2 0.14.0 which is incompatible.
 RUN    pip3 install --no-cache-dir httplib2==0.12.0 && \
     pip3 install --no-cache-dir notebook==$JUPYTER_VERSION jupyterlab==$JUPYTERLAB_VERSION nbgitpuller==0.7.2 && \
@@ -43,6 +43,15 @@ RUN apt update && apt install -y r-base r-base-dev libxml2-dev && rm -rf /var/li
     R -e "install.packages(c('tidyverse'),repos = 'http://cran.us.r-project.org')" && \
     R -e "install.packages('devtools', repos = 'http://cran.us.r-project.org')"
 
+#RUN apt-get update
+#RUN apt-get install wget
+#RUN wget http://downloads.typesafe.com/scala/2.13.1/scala-2.13.1.tgz
+#RUN tar xvf scala-2.13.1.tgz
+#RUN sudo mv scala-2.13.1 /usr/lib\
+#    sudo ln -s /usr/lib/scala-2.13.1 /usr/lib/scala && \
+#    export PATH=$PATH:/usr/lib/scala/bin && \
+#    scala -version
+
 ##############################
 # Spark Support layer
 ##############################
@@ -68,6 +77,15 @@ RUN mkdir -p /usr/share/man/man1 && \
     wget -qO $SPARK_HOME/jars/spark-avro_2.11-$SPARK_VERSION.jar \
       "https://search.maven.org/remotecontent?filepath=org/apache/spark/spark-avro_2.11/$SPARK_VERSION/spark-avro_2.11-$SPARK_VERSION.jar" &&\
     cp $SPARK_HOME/examples/jars/spark-examples_2.11-$SPARK_VERSION.jar $SPARK_HOME/jars
+
+#RUN apt-get update
+#RUN apt-get install wget
+#RUN wget http://downloads.typesafe.com/scala/2.13.1/scala-2.13.1.tgz
+#RUN tar xvf scala-2.13.1.tgz
+#RUN sudo mv scala-2.13.1 /usr/lib\
+#    sudo ln -s /usr/lib/scala-2.13.1 /usr/lib/scala && \
+#    export PATH=$PATH:/usr/lib/scala/bin && \
+#    scala -version
 
 
 #####################################
@@ -100,5 +118,13 @@ WORKDIR $HOME
 COPY files /
 
 USER jovyan
+RUN cd $HOME && \
+     wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-7.4.2.zip && \
+     unzip elasticsearch-hadoop-7.4.2.zip  && \
+     mv /home/jovyan/elasticsearch-hadoop-7.4.2/dist/elasticsearch-spark-20_2.11-7.4.2.jar $SPARK_HOME/jars
 
 ENTRYPOINT ["start-notebook.sh"]
+
+#docker build -t spark-elastic /root/dockerized-jupyter/
+#docker run -p 8888:8888 gradiant/jupyter:6.0.1 --ip=0.0.0.0
+#docker run -p 8888:8888 spark-elastic --ip=0.0.0.0
